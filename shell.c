@@ -17,13 +17,11 @@ unsigned long timeval2long(struct timeval* timeVal){
 	return timeVal->tv_sec*1000 + timeVal->tv_usec/1000;
 }
 
-#define MAX_ARGS 10
 int main(int argc, const char* argv[]){
 
 
 	char* strCommand;
 	char* strArgument;
-	char* arguments[MAX_ARGS];	
 	
 	char* buffer = NULL; 	// buffer to hold input lines
 	int read;		//status of line reading
