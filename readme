@@ -1,0 +1,7 @@
+Daniel Fitzgerald
+A.J. Tamburri
+Project 1 Checkpoint
+
+We have tested our runCommand executable by passing it a call to ls /home.
+It prints out the command it recognizes, the output of the command, and the 
+required usage data for the command.
