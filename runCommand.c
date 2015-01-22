@@ -54,5 +54,5 @@ int main(int argc, const char* argv[]){
 		printf("Soft Page Faults: %lu\n", rusageStruct.ru_minflt);
 		printf("Hard Page Faults: %lu\n", rusageStruct.ru_majflt);
 	}
-	
+	return 0;
 }

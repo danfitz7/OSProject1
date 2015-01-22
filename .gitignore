@@ -2,6 +2,14 @@
 *~
 *.zip
 
+#eclipse projewct files
+.project
+.cproject
+shell/*
+Default/*
+runCommand/*
+.setting/*
+
 # Object files
 *.o
 *.ko
@@ -33,3 +41,4 @@ shell
 *.i*86
 *.x86_64
 *.hex
+/Default/
