@@ -1,6 +1,7 @@
 # Misc
 *~
 *.zip
+*.settings
 
 #eclipse projewct files
 .project
