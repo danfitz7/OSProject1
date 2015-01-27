@@ -19,35 +19,71 @@ unsigned long timeval2long(struct timeval* timeVal){
 	return timeVal->tv_sec*1000 + timeVal->tv_usec/1000;
 }
 
+struct rusage prev_cumulative_rusage = {0}; //calloc(sizeof (struct rusage), 0); the usage cumulative statistics for all previous child processes (init to all 0s)
+struct rusage rusage_sub(struct rusage current_usage){
+	// subtract the (relivent) previous cumulative usages from the current cumulative usages to get the usage attributed to the mst recent child process
+	current_usage.ru_utime.tv_sec -= prev_cumulative_rusage.ru_utime.tv_sec;
+	current_usage.ru_utime.tv_usec -= prev_cumulative_rusage.ru_utime.tv_usec;
+	current_usage.ru_stime.tv_sec -= prev_cumulative_rusage.ru_stime.tv_sec;
+	current_usage.ru_stime.tv_usec -= prev_cumulative_rusage.ru_stime.tv_usec;
+	current_usage.ru_nivcsw -= prev_cumulative_rusage.ru_nivcsw;
+	current_usage.ru_nvcsw -= prev_cumulative_rusage.ru_nvcsw;
+	current_usage.ru_minflt -= prev_cumulative_rusage.ru_minflt;
+	current_usage.ru_majflt -= prev_cumulative_rusage.ru_majflt;
+
+	//reset the cumulative usages
+	getrusage(RUSAGE_CHILDREN, &prev_cumulative_rusage);
+
+	//return the usage for the most recent child process
+	return current_usage;
+}
+
 // Execute the given command with the given arguments and print its statistics.
-void executeShellCommand(const char* strCommand, const char*   arguments[]){
+void executeShellCommand(const char* strCommand, char* const arguments[]){
 	//store child process statistics
 	struct timeval start;
 	struct timeval finish;
 	long elapsed;
 
+	// keep track of our children
 	int status;
+	int childExecutionFailed = 0;
+	int* p_childExecutionFailed = &childExecutionFailed;
+
 	int childPID = fork();
 	if (childPID==0){
-		execvp(strCommand, (char**) arguments); //we are the child, run the command
+		printf("Executing '%s'\n",strCommand);
+		int error = execvp(strCommand, arguments); //we are the child, run the command
+		if (error == -1){
+			printf("execution failed\n");
+			*p_childExecutionFailed = 1;
+		}
 	}else{
+		if (!childExecutionFailed){
+			gettimeofday(&start, NULL);
+			int pid = wait(&status);//we are the parent, monitor the child
+			if (pid != -1){
+				gettimeofday(&finish, NULL);
+				elapsed = (finish.tv_sec-start.tv_sec)*1000 + (finish.tv_usec-start.tv_usec)/1000;
 
-		gettimeofday(&start, NULL);
-		int pid = wait(&status);//we are the parent, monitor the child
-		gettimeofday(&finish, NULL);
-		elapsed = (finish.tv_sec-start.tv_sec)*1000 + (finish.tv_usec-start.tv_usec)/1000;
+				struct rusage current_usage;
+				/*int usage = */getrusage(RUSAGE_CHILDREN, &current_usage);
+				current_usage = rusage_sub(current_usage);
 
-		struct rusage rusageStruct;
-		int usage = getrusage(RUSAGE_CHILDREN, &rusageStruct);
-		long uTimeMs = timeval2long(&(rusageStruct.ru_utime));
-		long sTimeMs = timeval2long(&(rusageStruct.ru_stime));
-		printf("Usage:\nElapsed Wall Clock Time: %lu millisecond(s)\n", elapsed);
-		printf("User CPU Time: %lu, System CPU Time: %lu\n", uTimeMs, sTimeMs);
-		printf("Involuntary Preemptions: %lu\n", rusageStruct.ru_nivcsw);
-		printf("Voluntary CPU Switches: %lu\n", rusageStruct.ru_nvcsw);
-		printf("Soft Page Faults: %lu\n", rusageStruct.ru_minflt);
-		printf("Hard Page Faults: %lu\n", rusageStruct.ru_majflt);
+				long uTimeMs = timeval2long(&(current_usage.ru_utime));
+				long sTimeMs = timeval2long(&(current_usage.ru_stime));
+
+				printf("\nUsage:\nElapsed Wall Clock Time: %lu millisecond(s)\n", elapsed);
+				printf("User CPU Time: %lu, System CPU Time: %lu\n", uTimeMs, sTimeMs);
+				printf("Involuntary Preemptions: %lu\n", current_usage.ru_nivcsw);
+				printf("Voluntary CPU Switches: %lu\n", current_usage.ru_nvcsw);
+				printf("Soft Page Faults: %lu\n", current_usage.ru_minflt);
+				printf("Hard Page Faults: %lu\n", current_usage.ru_majflt);
+				return;
+			}
+		}
 	}
+	printf("Not printing statistics for failed execution.\n");
 }
 
 // Change the working directory of the shell to the given path.
@@ -71,13 +107,12 @@ int exitShell(){
 #define MAX_LINE_LENGTH 128
 char buffer[MAX_LINE_LENGTH+2]; 	// Buffer to hold input line characters, plus an extra, plus a NULL termination
 char* promptForInput(){
-	printf("Enter a command and its arguments:");
+	printf("\nEnter a command and its arguments:");
 
 	// read the next line from standard input, store in the input buffer.
 	return fgets(buffer, sizeof(buffer)+1, stdin);
 }
 
-#define MAX_LINE_LENGTH 128
 #define MAX_ARGS 32
 int main(int argc, const char* argv[]){
 
@@ -147,8 +182,8 @@ int main(int argc, const char* argv[]){
 						printf("\t%s\n", arguments[i]);
 					}*/
 
-					arguments[max_arg_i+1] = NULL; //last arg is null pointer
-					//executeShellCommand(strCommand, arguments);
+					arguments[max_arg_i] = NULL; //last arg is null pointer
+					executeShellCommand(strCommand, arguments);
 
 					//free memory from the arguments
 					for (int i=0;i<max_arg_i;i++){
