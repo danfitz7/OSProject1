@@ -115,7 +115,7 @@ char* promptForInput(){
 	return fgets(buffer, sizeof(buffer)+1, stdin);
 }
 
-// Main shell program
+// Main shell2 program
 #define MAX_ARGS 32
 int main(int argc, const char* argv[]){
 
@@ -136,7 +136,7 @@ int main(int argc, const char* argv[]){
 			int c;
 			while ((c = fgetc(stdin)) != EOF && c != '\n'); //http://stackoverflow.com/questions/7898215/how-to-clear-input-buffer-in-c
 		}else{
-//			printf("Received line '%s'\n", buffer);
+	//		printf("Received line '%s'\n", buffer);
 
 			// extract the command
 			char* chompedBuffer = strtok(buffer,"\n");		//chop off trailing newline
@@ -179,18 +179,33 @@ int main(int argc, const char* argv[]){
 				}
 				max_arg_i--; //undo the last increment. This is now the index of the last argument
 				if (!MAX_ARGS_Error){
+//
+					//detect ampersand at end of line, indicating the command should be run as a background process
+					int runInBackgroundFlag = 0;
+					if (strcmp(arguments[max_arg_i], "&")==0){
+						printf("(Command will run in background).\n");
+						runInBackgroundFlag = 1;
+
+						// get rid of the last "&" argument.
+						free (arguments[max_arg_i]);
+						max_arg_i--;
+						if (max_arg_i<0){
+							max_arg_i = 0;
+						}
+					}
+					arguments[max_arg_i+1] = NULL; //before we pass the arguments array to an exec command, the last element should be a NULL pointer.
+
 //					printf("Received %d arguments for command %s\n", max_arg_i, strCommand);
 
 					//debug print
-					/*printf("Arguments buffer (after first command string argument) is...\n");
-					for (int i=1;i<=max_arg_i;i++){
-						printf("\t%s\n", arguments[i]);
-					}*/
+//					printf("Arguments buffer (after first command string argument) is...\n"); for (int i=1;i<=max_arg_i;i++){printf("\t%s\n", arguments[i]);}
+					if (runInBackgroundFlag){
 
-					arguments[max_arg_i+1] = NULL; //last arg is null pointer
-					executeShellCommand(strCommand, arguments);
+					}else{
+						executeShellCommand(strCommand, arguments);
+					}
 
-					//free memory from the arguments
+					//free memory from the arguments (except the first which just points to strCommand, which should be the first part of the buffer
 					for (int i=1;i<=max_arg_i;i++){
 						free(arguments[i]);
 					}
