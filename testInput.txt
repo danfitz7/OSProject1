@@ -1,3 +1,4 @@
-hello world
+ls /home /sys
 cd /home
-execute this
+pwd
+ls /root

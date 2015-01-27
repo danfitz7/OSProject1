@@ -46,22 +46,21 @@ void executeShellCommand(const char* strCommand, char* const arguments[]){
 	long elapsed;
 
 	// keep track of our children
-	int status;
-	int childExecutionFailed = 0;
-	int* p_childExecutionFailed = &childExecutionFailed;
-
 	int childPID = fork();
 	if (childPID==0){
 		printf("Executing '%s'\n\n",strCommand);
 		int error = execvp(strCommand, arguments); //we are the child, run the command
 		if (error == -1){
-			printf("execution failed\n");
-			*p_childExecutionFailed = 1;
+			printf("Child process execution failed.\n");
+			exit(127); //kill ourselves (child).
 		}
 	}else{
-		if (!childExecutionFailed){
-			gettimeofday(&start, NULL);
-			int pid = wait(&status);//we are the parent, monitor the child
+		gettimeofday(&start, NULL);
+		int status;
+		int pid = wait(&status);//we are the parent, monitor the child
+		if (WIFEXITED(status)!=0 && WEXITSTATUS(status) != 0){
+			printf("Invalid Command - Child process execution failed.\n");
+		}else{
 			if (pid != -1){
 				gettimeofday(&finish, NULL);
 				elapsed = (finish.tv_sec-start.tv_sec)*1000 + (finish.tv_usec-start.tv_usec)/1000;
@@ -109,13 +108,13 @@ int exitShell(){
 #define MAX_LINE_LENGTH 128
 char buffer[MAX_LINE_LENGTH+2]; 	// Buffer to hold input line characters, plus an extra, plus a NULL termination
 char* promptForInput(){
-	printf("\nEnter a command and its arguments:");
+	printf("\nEnter a command and its arguments _>");
 
 	// read the next line from standard input, store in the input buffer.
 	return fgets(buffer, sizeof(buffer)+1, stdin);
 }
 
-// Main shell program
+// Main shell2 program
 #define MAX_ARGS 32
 int main(int argc, const char* argv[]){
 
@@ -141,58 +140,60 @@ int main(int argc, const char* argv[]){
 			// extract the command
 			char* chompedBuffer = strtok(buffer,"\n");		//chop off trailing newline
 			strCommand = strtok(chompedBuffer, delimiters);	//extract the command as the first token (whitespace-seperated word)
-//			printf("Command is '%s' (%d characters)\n", strCommand, strlen(strCommand));
-
-			// detect shell exit
-			if (strcmp(strCommand, "exit") == 0){
-				exitShell();
-			}
-
-			// get the first argument (if there is one)
-			strArgument = strtok(NULL, delimiters); 	//attempt to parse the next token (first argument)
-
-			//catch shell change directory, give it the path
-			if (strcmp(strCommand, "cd") == 0){
-				changeDirectory(strArgument);
+			if (strCommand==NULL){
+				continue;
 			}else{
 
-				// loop through input line, extracting and counting arguments
-				int max_arg_i = 1;	//index in the arguments[] array of the last argument parsed so far. (Index 0 is alway the command string)
-				arguments[0] = strCommand;
-				int MAX_ARGS_Error = 0;
-				while (strArgument!=NULL){
-//					printf("Next token...\n");
+//				printf("Command is '%s' (%d characters)\n", strCommand, strlen(strCommand));
 
-					if (max_arg_i > MAX_ARGS){
-						printf("ERROR: Maximum number of arguments exceeded.\n");
-						MAX_ARGS_Error = 1;
-						break;
-					}
-
-					//make a new string to hold the argument, copy from arguments buffer
-					size_t argument_length = strlen(strArgument); //chompedBuffer-strArgument
-//					printf("\tArgument %d:'%s' has %d characters\n", max_arg_i, strArgument, argument_length);
-					arguments[max_arg_i] = (char*) malloc(argument_length+1);
-					strcpy(arguments[max_arg_i], strArgument);
-					strArgument = strtok(NULL, delimiters);
-					max_arg_i++;
+				// detect shell exit
+				if (strcmp(strCommand, "exit") == 0){
+					exitShell();
 				}
-				max_arg_i--; //undo the last increment. This is now the index of the last argument
-				if (!MAX_ARGS_Error){
-//					printf("Received %d arguments for command %s\n", max_arg_i, strCommand);
 
-					//debug print
-					/*printf("Arguments buffer (after first command string argument) is...\n");
-					for (int i=1;i<=max_arg_i;i++){
-						printf("\t%s\n", arguments[i]);
-					}*/
+				// get the first argument (if there is one)
+				strArgument = strtok(NULL, delimiters); 	//attempt to parse the next token (first argument)
 
-					arguments[max_arg_i+1] = NULL; //last arg is null pointer
-					executeShellCommand(strCommand, arguments);
+				// catch shell change directory, give it the path
+				if (strcmp(strCommand, "cd") == 0){
+					changeDirectory(strArgument);
+				}else{
 
-					//free memory from the arguments
-					for (int i=1;i<=max_arg_i;i++){
-						free(arguments[i]);
+					// loop through input line, extracting and counting arguments
+					int max_arg_i = 1;	//index in the arguments[] array of the last argument parsed so far. (Index 0 is alway the command string)
+					arguments[0] = strCommand;
+					int MAX_ARGS_Error = 0;
+					while (strArgument!=NULL){
+//						printf("Next token...\n");
+
+						if (max_arg_i > MAX_ARGS){
+							printf("ERROR: Maximum number of arguments exceeded.\n");
+							MAX_ARGS_Error = 1;
+							break;
+						}
+
+						//make a new string to hold the argument, copy from arguments buffer
+						size_t argument_length = strlen(strArgument); //chompedBuffer-strArgument
+//						printf("\tArgument %d:'%s' has %d characters\n", max_arg_i, strArgument, argument_length);
+						arguments[max_arg_i] = (char*) malloc(argument_length+1);
+						strcpy(arguments[max_arg_i], strArgument);
+						strArgument = strtok(NULL, delimiters);
+						max_arg_i++;
+					}
+					max_arg_i--; //undo the last increment. This is now the index of the last argument (or the command string if there were 0 arguments)
+					if (!MAX_ARGS_Error){
+						arguments[max_arg_i+1] = NULL; //before we pass the arguments array to an exec command, the last element should be a NULL pointer.
+
+//						printf("Received %d arguments for command %s\n", max_arg_i, strCommand);
+
+						//debug print
+//						printf("Arguments buffer (after first command string argument) is...\n"); for (int i=1;i<=max_arg_i;i++){printf("\t%s\n", arguments[i]);}
+						executeShellCommand(strCommand, arguments);
+
+						//free memory from the arguments (except the first which just points to strCommand, which should be the first part of the buffer
+						for (int i=1;i<=max_arg_i;i++){
+							free(arguments[i]);
+						}
 					}
 				}
 			}
