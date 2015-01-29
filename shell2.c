@@ -39,13 +39,29 @@ struct rusage rusage_sub(struct rusage current_usage){
 	return current_usage;
 }
 
+void printStatistics(int pid, struct rusage usage){
+	struct rusage current_usage = rusage_sub(usage);
+
+	long uTimeMs = timeval2long(&(current_usage.ru_utime));
+	long sTimeMs = timeval2long(&(current_usage.ru_stime));
+
+	printf("\n\tUsage for background process %d:", pid);
+	printf("\tUser CPU Time: %lu, System CPU Time: %lu\n", uTimeMs, sTimeMs);
+	printf("\tInvoluntary Preemptions: %lu\n", current_usage.ru_nivcsw);
+	printf("\tVoluntary CPU Switches: %lu\n", current_usage.ru_nvcsw);
+	printf("\tSoft Page Faults: %lu\n", current_usage.ru_minflt);
+	printf("\tHard Page Faults: %lu\n", current_usage.ru_majflt);
+}
+
 // wait a child process to finish, report its stats, wait for the next, and so on until there are no more child processes
 // if noHang is 1 then return as soon as there are no more child processes with emediatly available statuses.
 void waitForChildrenToFinish(int hang){
 	printf("Waiting for child processes (%s)\n", ((hang)?"hang":"no hang"));
 	int status;
+	struct rusage current_usage;
 	int pid;
-	pid = (hang)?wait(&status):waitpid((pid_t)-1, &status, WNOHANG);	// don't hang (don't wait for all children to finish)
+
+	pid = wait4((pid_t)-1, &status, ((hang)?0:WNOHANG), &current_usage);// don't hang (don't wait for all children to finish)
 	while(pid !=0){ //Evaluates to a non-zero value if status was returned for a child process that terminated normally.
 		if (pid <0 ){
 			printf("\n\twait() found no children to wait for\n");
@@ -58,6 +74,7 @@ void waitForChildrenToFinish(int hang){
 				printf("\tBackground child process execution failed. (Invalid Command?)\n");
 			}else{
 				printf("\tBackground child process %d exited normally.\n", pid);
+				printStatistics(pid, current_usage);
 			}
 		}else{
 			if (pid != -1){
@@ -66,9 +83,9 @@ void waitForChildrenToFinish(int hang){
 				printf("\tERROR: pid = -1 for correctly exited process,\n");
 			}
 		}
-		pid = (hang)?wait(&status):waitpid((pid_t)-1, &status, WNOHANG);	// don't hang (don't wait for all children to finish)
+		pid = wait4((pid_t)-1, &status, ((hang)?0:WNOHANG), &current_usage);// don't hang (don't wait for all children to finish)
 	}
-	printf("\tNo child processes exited lately.\n");
+	printf("\tFinished waiting for children.\n");
 }
 
 // Execute the given command with the given arguments in the background
@@ -120,7 +137,7 @@ void executeShellCommand(const char* strCommand, char* const arguments[]){
 				long uTimeMs = timeval2long(&(current_usage.ru_utime));
 				long sTimeMs = timeval2long(&(current_usage.ru_stime));
 
-				printf("\n\tUsage:\n\tElapsed Wall Clock Time: %lu millisecond(s)\n", elapsed);
+				printf("\n\tUsage for (nonbackground) process %d:\n\tElapsed Wall Clock Time: %lu millisecond(s)\n",pid, elapsed);
 				printf("\tUser CPU Time: %lu, System CPU Time: %lu\n", uTimeMs, sTimeMs);
 				printf("\tInvoluntary Preemptions: %lu\n", current_usage.ru_nivcsw);
 				printf("\tVoluntary CPU Switches: %lu\n", current_usage.ru_nvcsw);
