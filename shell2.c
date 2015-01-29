@@ -15,6 +15,14 @@ Adaptation of runCommand that operates in REPL mode
 #include <sys/resource.h>
 #include <string.h>
 
+typedef struct{
+	int pid;
+	char* command;
+	long startTime;
+}process;
+int n_processes = 0;
+process processes[100];
+
 //helper function to convert timeval structs to numbers of microseconds
 unsigned long timeval2long(struct timeval* timeVal){
 	return timeVal->tv_sec*1000 + timeVal->tv_usec/1000;
@@ -91,6 +99,14 @@ void waitForChildrenToFinish(int hang){
 // Execute the given command with the given arguments in the background
 void executeBackgroundCommand(const char* strCommand, char* const arguments[]){
 	int childPID = fork();
+
+	//add process to processes list
+	processes[n_processes].pid = childPID;
+	processes[n_processes].command = (char*) malloc(sizeof(strCommand));
+	strcpy(processes[n_processes].command, strCommand);
+	gettimeofday(&processes[n_processes].startTime, NULL);
+	n_processes++;
+
 	if (childPID==0){ //if we're the child
 		printf("(Child) Executing '%s' in the background.\n\n",strCommand);
 		int error = execvp(strCommand, arguments); //we are the child, run the command
@@ -191,6 +207,13 @@ int lastCharacterIsAmpersand(char* string){
 	return result;
 }
 
+void printRunningProcesses(){
+	printf("\nRunning processes are...\n");
+	for (int i=0;i<n_processes;i++){
+		printf("\t[%d]: PID %d '%s' started at %lu\n", i, processes[i].pid, processes[i].command, processes[i].startTime);
+	}
+}
+
 // Main shell2 program
 #define MAX_ARGS 32
 int main(int argc, const char* argv[]){
@@ -226,6 +249,11 @@ int main(int argc, const char* argv[]){
 				// detect shell exit
 				if (strcmp(strCommand, "exit") == 0){
 					exitShell();
+				}
+
+				if (strcmp(strCommand, "jobs")==0){
+					printRunningProcesses();
+					continue;
 				}
 
 				// get the first argument (if there is one)

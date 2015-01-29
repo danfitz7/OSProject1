@@ -1,0 +1,112 @@
+/home/dan/Documents/SharedOSprojects/OSProject1
+/home/dan/Documents/SharedOSprojects/OSProject1
+/home/dan/Documents/SharedOSprojects/OSProject1
+Starting shell...
+
+Enter a command and its arguments _>Waiting for child processes (no hang)
+
+	wait() found no children to wait for
+	Finished waiting for children.
+
+	Usage for (nonbackground) process 9013:
+	Elapsed Wall Clock Time: 2 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 0
+	Voluntary CPU Switches: 5
+	Soft Page Faults: 201
+	Hard Page Faults: 0
+Waiting for child processes (no hang)
+
+	wait() found no children to wait for
+	Finished waiting for children.
+
+Enter a command and its arguments _>Ampersand detected in last argument.
+Waiting for child processes (no hang)
+	Finished waiting for children.
+
+Enter a command and its arguments _>Ampersand detected in last argument.
+Last argument is background indicator.
+Waiting for child processes (no hang)
+	Finished waiting for children.
+
+Enter a command and its arguments _>Waiting for child processes (no hang)
+	Finished waiting for children.
+
+	Usage for (nonbackground) process 9014:
+	Elapsed Wall Clock Time: 7 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 0
+	Voluntary CPU Switches: 4
+	Soft Page Faults: 230
+	Hard Page Faults: 0
+Waiting for child processes (no hang)
+	Finished waiting for children.
+
+Enter a command and its arguments _>Ampersand detected in last argument.
+Last argument is background indicator.
+Waiting for child processes (no hang)
+	Finished waiting for children.
+
+Enter a command and its arguments _>
+Running processes are...
+	[0]: PID 9014 'pwd' started at 1422505309
+	[1]: PID 9015 'sleep' started at 1422505309
+	[2]: PID 9017 'sleep' started at 1422505309
+
+Enter a command and its arguments _>Ampersand detected in last argument.
+Last argument is background indicator.
+Waiting for child processes (no hang)
+	Finished waiting for children.
+
+Enter a command and its arguments _>Waiting for child processes (no hang)
+	Finished waiting for children.
+
+	Usage for (nonbackground) process 9019:
+	Elapsed Wall Clock Time: 3 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 0
+	Voluntary CPU Switches: 4
+	Soft Page Faults: 200
+	Hard Page Faults: 0
+Waiting for child processes (no hang)
+	Finished waiting for children.
+
+Enter a command and its arguments _>Waiting for all children to finish...
+Waiting for child processes (hang)
+	pid:9016 for status:0 WIFSTATUS:1, WEXITSTATUS:0
+	Background child process 9016 exited normally.
+
+	Usage for background process 9016:	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 0
+	Voluntary CPU Switches: 4294967286
+	Soft Page Faults: 4294966868
+	Hard Page Faults: 0
+	pid:9017 for status:0 WIFSTATUS:1, WEXITSTATUS:0
+	Background child process 9017 exited normally.
+
+	Usage for background process 9017:	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 2
+	Voluntary CPU Switches: 4294967284
+	Soft Page Faults: 4294966672
+	Hard Page Faults: 0
+	pid:9015 for status:0 WIFSTATUS:1, WEXITSTATUS:0
+	Background child process 9015 exited normally.
+
+	Usage for background process 9015:	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 4294967294
+	Voluntary CPU Switches: 4294967280
+	Soft Page Faults: 4294966463
+	Hard Page Faults: 0
+	pid:9018 for status:0 WIFSTATUS:1, WEXITSTATUS:0
+	Background child process 9018 exited normally.
+
+	Usage for background process 9018:	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 4294967294
+	Voluntary CPU Switches: 4294967275
+	Soft Page Faults: 4294966252
+	Hard Page Faults: 0
+
+	wait() found no children to wait for
+	Finished waiting for children.
+
+Exiting shell...

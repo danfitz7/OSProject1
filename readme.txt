@@ -21,3 +21,6 @@ This list is currently implemented as a fixed-size array. A linked-list or stack
 When the "jobs" command is encountered, the information about the currently running background processes is printed. When a background process exits, it should be removed from this list and the memory for it's data structure should be freed.
 However, it was difficult to tell in the waitForChildrenToFinish() loop if a process had exited or not, so this was not completed. In addition, it is unclear if the statistics printed for background processes are compute correctly using the cumulative statistics.
 The process datastucture could be augmented to store the cumulative statistics at the time the process was greated, then these could be subtracted from subsiquent statistics until the process finishes. Whatever is left over belonged to that process. 
+
+testInput.txt is for shell, demonstrating basic commands with 0, 1 or multiple arguments, "cd", and "exit".
+TestInput2 is for shell2 demonstrating background commands ut of order with "jobs"

@@ -1,0 +1,60 @@
+/home/dan/Documents/SharedOSprojects/OSProject1
+dan
+/home:
+dan
+
+/sys:
+block
+bus
+class
+dev
+devices
+firmware
+fs
+hypervisor
+kernel
+module
+power
+/home
+Starting shell...
+
+Enter a command and its arguments _>
+	Usage:
+	Elapsed Wall Clock Time: 1 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 0
+	Voluntary CPU Switches: 4
+	Soft Page Faults: 199
+	Hard Page Faults: 0
+
+Enter a command and its arguments _>
+	Usage:
+	Elapsed Wall Clock Time: 2 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 1
+	Voluntary CPU Switches: 4
+	Soft Page Faults: 273
+	Hard Page Faults: 0
+
+Enter a command and its arguments _>
+	Usage:
+	Elapsed Wall Clock Time: 4 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 2
+	Voluntary CPU Switches: 3
+	Soft Page Faults: 275
+	Hard Page Faults: 0
+
+Enter a command and its arguments _>Changing working directory to '/home'
+
+Enter a command and its arguments _>
+	Usage:
+	Elapsed Wall Clock Time: 5 millisecond(s)
+	User CPU Time: 0, System CPU Time: 0
+	Involuntary Preemptions: 0
+	Voluntary CPU Switches: 4
+	Soft Page Faults: 200
+	Hard Page Faults: 0
+
+Enter a command and its arguments _>
+Exiting shell...

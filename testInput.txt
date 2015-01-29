@@ -1,4 +1,5 @@
 pwd
 ls /home
+ls /home /sys
 cd /home
 pwd
