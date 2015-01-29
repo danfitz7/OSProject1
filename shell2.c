@@ -8,8 +8,9 @@ Adaptation of runCommand that operates in REPL mode
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/wait.h>
+#define __USE_BSD
 #include <time.h>
 #include <sys/resource.h>
 #include <string.h>
@@ -36,6 +37,53 @@ struct rusage rusage_sub(struct rusage current_usage){
 
 	//return the usage for the most recent child process
 	return current_usage;
+}
+
+// wait a child process to finish, report its stats, wait for the next, and so on until there are no more child processes
+// if noHang is 1 then return as soon as there are no more child processes with emediatly available statuses.
+void waitForChildToFinish(int noHange){
+	int status;
+	int pid;
+	pid = (noHange==1)? waitpid((pid_t)-1, &status, WNOHANG):wait(&status);	// don't hang (don't wait for all children to finish)
+
+	while(pid !=0){ //Evaluates to a non-zero value if status was returned for a child process that terminated normally.
+		if (pid <0 ){
+			printf("Wait had some error!\n");
+			break;
+		}
+		printf("pid:%d for status:%d WIFSTATUS:%d, WEXITSTATUS:%d\n", pid, status, WIFEXITED(status), WEXITSTATUS(status));
+
+		if (WIFEXITED(status) != 0){
+			if (WEXITSTATUS(status) != 0){
+				printf("Background child process execution failed. (Invalid Command?)\n");
+			}else{
+				printf("Background child process %d exited normally.\n", pid);
+			}
+		}else{
+			if (pid != -1){
+				printf("Child process %d terminated.\n", pid);
+			}else{
+				printf("ERROR: pid = -1 for correctly exited process,\n");
+			}
+		}
+		pid = (noHange==1)? waitpid((pid_t)-1, &status, WNOHANG):wait(&status);	// don't hang (don't wait for all children to finish)
+	}
+	printf("No child processes exited lately.\n");
+}
+
+// Execute the given command with the given arguments in the background
+void executeBackgroundCommand(const char* strCommand, char* const arguments[]){
+	int childPID = fork();
+	if (childPID==0){ //if we're the child
+		printf("(Child) Executing '%s' in the background.\n\n",strCommand);
+		int error = execvp(strCommand, arguments); //we are the child, run the command
+		if (error == -1){
+			printf("(Child) Background child process execution failed.\n");
+			exit(127); //kill ourselves (child).
+		}
+	}else{ //if we're the parent
+		waitForChildToFinish(0);
+	}
 }
 
 // Execute the given command with the given arguments and print its statistics.
@@ -220,7 +268,8 @@ int main(int argc, const char* argv[]){
 						//debug print
 //						printf("Arguments buffer (after first command string argument) is...\n"); for (int i=1;i<=max_arg_i;i++){printf("\t%s\n", arguments[i]);}
 						if (runInBackgroundFlag){
-							printf("(Command '%s' will run in background).\n", strCommand);
+//							printf("(Command '%s' will run in background).\n", strCommand);
+							executeBackgroundCommand(strCommand, arguments);
 						}else{
 							executeShellCommand(strCommand, arguments);
 						}

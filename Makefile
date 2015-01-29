@@ -6,13 +6,13 @@ all: runCommand.o  shell.o shell2.o
 	
 
 runCommand.o: runCommand.c
-	gcc -std=c99 -Wall -c runCommand.c -I.
+	gcc -std=c99 -Wall -g -c runCommand.c -I.
 
 shell.o: shell.c
-	gcc -std=c99 -Wall -c shell.c -I.
+	gcc -std=c99 -Wall -g -c shell.c -I.
 
 shell2.o: shell2.c
-	gcc -std=c99 -Wall -c shell2.c -I.
+	gcc -std=c99 -Wall -g -c shell2.c -I.
 
 clean:
 	rm *.o
