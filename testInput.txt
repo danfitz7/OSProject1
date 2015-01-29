@@ -1,4 +1,4 @@
-ls /home /sys
+pwd
+ls /home
 cd /home
 pwd
-ls /root

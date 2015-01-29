@@ -41,34 +41,34 @@ struct rusage rusage_sub(struct rusage current_usage){
 
 // wait a child process to finish, report its stats, wait for the next, and so on until there are no more child processes
 // if noHang is 1 then return as soon as there are no more child processes with emediatly available statuses.
-void waitForChildToFinish(int noHange){
+void waitForChildrenToFinish(int hang){
+	printf("Waiting for child processes (%s)\n", ((hang)?"hang":"no hang"));
 	int status;
 	int pid;
-	pid = (noHange==1)? waitpid((pid_t)-1, &status, WNOHANG):wait(&status);	// don't hang (don't wait for all children to finish)
-
+	pid = (hang)?wait(&status):waitpid((pid_t)-1, &status, WNOHANG);	// don't hang (don't wait for all children to finish)
 	while(pid !=0){ //Evaluates to a non-zero value if status was returned for a child process that terminated normally.
 		if (pid <0 ){
-			printf("Wait had some error!\n");
+			printf("\n\twait() found no children to wait for\n");
 			break;
 		}
-		printf("pid:%d for status:%d WIFSTATUS:%d, WEXITSTATUS:%d\n", pid, status, WIFEXITED(status), WEXITSTATUS(status));
+		printf("\tpid:%d for status:%d WIFSTATUS:%d, WEXITSTATUS:%d\n", pid, status, WIFEXITED(status), WEXITSTATUS(status));
 
 		if (WIFEXITED(status) != 0){
 			if (WEXITSTATUS(status) != 0){
-				printf("Background child process execution failed. (Invalid Command?)\n");
+				printf("\tBackground child process execution failed. (Invalid Command?)\n");
 			}else{
-				printf("Background child process %d exited normally.\n", pid);
+				printf("\tBackground child process %d exited normally.\n", pid);
 			}
 		}else{
 			if (pid != -1){
-				printf("Child process %d terminated.\n", pid);
+				printf("\tChild process %d terminated.\n", pid);
 			}else{
-				printf("ERROR: pid = -1 for correctly exited process,\n");
+				printf("\tERROR: pid = -1 for correctly exited process,\n");
 			}
 		}
-		pid = (noHange==1)? waitpid((pid_t)-1, &status, WNOHANG):wait(&status);	// don't hang (don't wait for all children to finish)
+		pid = (hang)?wait(&status):waitpid((pid_t)-1, &status, WNOHANG);	// don't hang (don't wait for all children to finish)
 	}
-	printf("No child processes exited lately.\n");
+	printf("\tNo child processes exited lately.\n");
 }
 
 // Execute the given command with the given arguments in the background
@@ -82,7 +82,7 @@ void executeBackgroundCommand(const char* strCommand, char* const arguments[]){
 			exit(127); //kill ourselves (child).
 		}
 	}else{ //if we're the parent
-		waitForChildToFinish(0);
+		waitForChildrenToFinish(0);
 	}
 }
 
@@ -147,6 +147,8 @@ void changeDirectory(char* strPath){
 
 // Exit this hsell program
 int exitShell(){
+	printf("Waiting for all children to finish...\n");
+	waitForChildrenToFinish(1);
 	printf("\nExiting shell...\n");
 	exit(0);
 	return 0;
@@ -271,7 +273,9 @@ int main(int argc, const char* argv[]){
 //							printf("(Command '%s' will run in background).\n", strCommand);
 							executeBackgroundCommand(strCommand, arguments);
 						}else{
+							waitForChildrenToFinish(0);
 							executeShellCommand(strCommand, arguments);
+							waitForChildrenToFinish(0);
 						}
 
 						//free memory from the arguments (except the first which just points to strCommand, which should be the first part of the buffer
